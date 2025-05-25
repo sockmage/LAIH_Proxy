@@ -18,5 +18,3 @@ POST /chat
     {"role": "user", "content": "Hello!"}
   ]
 }
-```
-```
