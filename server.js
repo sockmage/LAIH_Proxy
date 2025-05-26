@@ -4,7 +4,7 @@ import cors from 'cors';
 import multer from 'multer';
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
