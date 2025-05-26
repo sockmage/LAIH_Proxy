@@ -1,14 +1,13 @@
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
-const multer = require('multer');
+import multer from 'multer';
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
 const upload = multer();
 
 app.post('/chat', async (req, res) => {
