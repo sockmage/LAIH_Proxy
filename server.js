@@ -107,40 +107,6 @@ app.post('/chat/pdf', upload.single('file'), async (req, res) => {
   }
 });
 
-// Новый endpoint для поиска фото по запросу
-app.get('/image/search', async (req, res) => {
-  const query = req.query.q;
-  if (!query) {
-    return res.status(400).json({ error: 'No query provided' });
-  }
-  try {
-    // Используем DuckDuckGo Images API (неофициальный)
-    const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`;
-    // Получаем токен vqd
-    const tokenRes = await axios.get(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
-    });
-    const vqdMatch = tokenRes.data.match(/vqd='([\d-]+)'/);
-    if (!vqdMatch) {
-      return res.status(500).json({ error: 'Failed to get vqd token from DuckDuckGo' });
-    }
-    const vqd = vqdMatch[1];
-    // Получаем изображения
-    const apiUrl = `https://duckduckgo.com/i.js?l=us-en&o=json&q=${encodeURIComponent(query)}&vqd=${vqd}`;
-    const imgRes = await axios.get(apiUrl, { headers: { 'Referer': searchUrl } });
-    if (imgRes.data && imgRes.data.results && imgRes.data.results.length > 0) {
-      return res.json({ image: imgRes.data.results[0].image });
-    } else {
-      return res.status(404).json({ error: 'No images found' });
-    }
-  } catch (error) {
-    console.error('Image search error:', error.message);
-    return res.status(500).json({ error: 'Image search failed', message: error.message });
-  }
-});
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Proxy server running on port ${PORT}`);
