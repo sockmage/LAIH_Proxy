@@ -2,6 +2,7 @@ import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
 import multer from 'multer';
+import qs from 'querystring';
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -103,6 +104,36 @@ app.post('/chat/pdf', upload.single('file'), async (req, res) => {
       console.error('Error:', error.message);
       res.status(500).json({ error: 'Unknown error', message: error.message });
     }
+  }
+});
+
+// Новый endpoint для поиска фото по запросу
+app.get('/image/search', async (req, res) => {
+  const query = req.query.q;
+  if (!query) {
+    return res.status(400).json({ error: 'No query provided' });
+  }
+  try {
+    // Используем DuckDuckGo Images API (неофициальный)
+    const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`;
+    // Получаем токен vqd
+    const tokenRes = await axios.get(searchUrl);
+    const vqdMatch = tokenRes.data.match(/vqd='([\d-]+)'/);
+    if (!vqdMatch) {
+      return res.status(500).json({ error: 'Failed to get vqd token from DuckDuckGo' });
+    }
+    const vqd = vqdMatch[1];
+    // Получаем изображения
+    const apiUrl = `https://duckduckgo.com/i.js?l=us-en&o=json&q=${encodeURIComponent(query)}&vqd=${vqd}`;
+    const imgRes = await axios.get(apiUrl, { headers: { 'Referer': searchUrl } });
+    if (imgRes.data && imgRes.data.results && imgRes.data.results.length > 0) {
+      return res.json({ image: imgRes.data.results[0].image });
+    } else {
+      return res.status(404).json({ error: 'No images found' });
+    }
+  } catch (error) {
+    console.error('Image search error:', error.message);
+    return res.status(500).json({ error: 'Image search failed', message: error.message });
   }
 });
 
