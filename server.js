@@ -117,7 +117,11 @@ app.get('/image/search', async (req, res) => {
     // Используем DuckDuckGo Images API (неофициальный)
     const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`;
     // Получаем токен vqd
-    const tokenRes = await axios.get(searchUrl);
+    const tokenRes = await axios.get(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
     const vqdMatch = tokenRes.data.match(/vqd='([\d-]+)'/);
     if (!vqdMatch) {
       return res.status(500).json({ error: 'Failed to get vqd token from DuckDuckGo' });
