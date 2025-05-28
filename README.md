@@ -1,20 +1,32 @@
-# OpenAI Proxy for Android Apps
+# LAIH_Proxy
 
-A simple Node.js proxy to forward requests from your app to OpenAI API, bypassing regional blocks.
+Node.js-прокси для Language AI Helper — централизует все запросы к OpenAI (чат, Vision, PDF) и позволяет обходить региональные ограничения.
 
-## Usage
+## Особенности
 
-1. Deploy to Railway (or any Node.js hosting).
-2. Set environment variable `OPENAI_API_KEY` in Railway dashboard.
-3. Send POST requests to `/chat` with the same body as OpenAI's `/v1/chat/completions`.
+- Проксирование всех запросов к OpenAI (chat, vision, PDF)
+- Защита ключа OpenAI (ключ хранится только на сервере)
+- Легко деплоится на Railway, Render, VPS и др.
+- Не содержит поиска изображений (для этого используйте LAIH_DDG_Image_Proxy)
 
-## Example request
+## Запуск
 
-POST /chat
-```json
-{
-  "model": "gpt-3.5-turbo",
-  "messages": [
-    {"role": "user", "content": "Hello!"}
-  ]
-}
+```bash
+npm install
+OPENAI_API_KEY=sk-... node server.js
+```
+
+## Эндпоинты
+
+- `POST /chat` — проксирует запросы к OpenAI Chat API
+- `POST /chat/pdf` — проксирует PDF/vision-запросы
+
+## Деплой на Railway
+1. Зайдите на [Railway](https://railway.app/), создайте новый проект.
+2. Подключите репозиторий с LAIH_Proxy.
+3. В настройках проекта добавьте переменную окружения `OPENAI_API_KEY`.
+4. Запустите деплой — Railway сам соберёт и запустит сервер.
+
+## Лицензия
+
+GPL-2.0
