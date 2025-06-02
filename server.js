@@ -57,7 +57,7 @@ app.post('/chat/pdf', upload.single('file'), async (req, res) => {
     const base64Pdf = req.file.buffer.toString('base64');
     // Формируем JSON-запрос для vision
     const openaiRequest = {
-      model: req.body.model || 'gpt-4o',
+      model: req.body.model || 'gpt-4-vision-preview',
       messages: [
         {
           role: 'user',
@@ -164,18 +164,14 @@ app.post('/tts', async (req, res) => {
 });
 
 // Endpoint для анализа изображений (GPT-4 Vision)
-app.post('/chat/vision', (req, res, next) => {
-  console.log('--- Incoming /chat/vision request (before multer) ---');
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  next();
-}, upload.single('file'), async (req, res) => {
+app.post('/chat/vision', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
     const base64Image = req.file.buffer.toString('base64');
     const openaiRequest = {
-      model: 'gpt-4o',
+      model: 'gpt-4-vision-preview',
       messages: [
         {
           role: 'user',
