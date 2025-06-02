@@ -107,6 +107,53 @@ app.post('/chat/pdf', upload.single('file'), async (req, res) => {
   }
 });
 
+// Endpoint для TTS (Text-to-Speech) через OpenAI
+app.post('/tts', async (req, res) => {
+  /*
+    Ожидается body:
+    {
+      "input": "Текст для озвучивания",
+      "voice": "sora" // или arbor, sol, maple, ember, breeze, vale, juniper, spruce, cove
+    }
+  */
+  const { input, voice } = req.body;
+  if (!input || !voice) {
+    return res.status(400).json({ error: 'Missing input or voice' });
+  }
+  try {
+    const response = await axios.post(
+      'https://api.openai.com/v1/audio/speech',
+      {
+        model: 'tts-1',
+        input,
+        voice
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        responseType: 'arraybuffer' // Получаем аудиофайл
+      }
+    );
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Disposition': 'inline; filename="speech.mp3"'
+    });
+    res.send(response.data);
+  } catch (error) {
+    console.error('--- OpenAI TTS error ---');
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Data:', JSON.stringify(error.response.data, null, 2));
+      res.status(error.response.status).json(error.response.data);
+    } else {
+      console.error('Error:', error.message);
+      res.status(500).json({ error: 'Unknown error', message: error.message });
+    }
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Proxy server running on port ${PORT}`);
