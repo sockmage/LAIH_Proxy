@@ -145,8 +145,17 @@ app.post('/tts', async (req, res) => {
     console.error('--- OpenAI TTS error ---');
     if (error.response) {
       console.error('Status:', error.response.status);
-      console.error('Data:', JSON.stringify(error.response.data, null, 2));
-      res.status(error.response.status).json(error.response.data);
+      // Декодируем Buffer в строку для читаемого лога
+      let errorText = '';
+      if (Buffer.isBuffer(error.response.data)) {
+        errorText = error.response.data.toString('utf8');
+      } else if (typeof error.response.data === 'object' && error.response.data.type === 'Buffer') {
+        errorText = Buffer.from(error.response.data.data).toString('utf8');
+      } else {
+        errorText = JSON.stringify(error.response.data, null, 2);
+      }
+      console.error('Data:', errorText);
+      res.status(error.response.status).send(errorText);
     } else {
       console.error('Error:', error.message);
       res.status(500).json({ error: 'Unknown error', message: error.message });
