@@ -163,6 +163,106 @@ app.post('/tts', async (req, res) => {
   }
 });
 
+// Endpoint для анализа изображений (GPT-4 Vision)
+app.post('/chat/vision', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const base64Image = req.file.buffer.toString('base64');
+    const openaiRequest = {
+      model: 'gpt-4-vision-preview',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: req.body.prompt || 'Что на этом изображении?' },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:${req.file.mimetype};base64,${base64Image}`
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: parseInt(req.body.max_tokens) || 300
+    };
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      openaiRequest,
+      {
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error('--- OpenAI Vision error ---');
+    if (error.response) {
+      let errorText = '';
+      if (Buffer.isBuffer(error.response.data)) {
+        errorText = error.response.data.toString('utf8');
+      } else if (typeof error.response.data === 'object' && error.response.data.type === 'Buffer') {
+        errorText = Buffer.from(error.response.data.data).toString('utf8');
+      } else {
+        errorText = JSON.stringify(error.response.data, null, 2);
+      }
+      console.error('Data:', errorText);
+      res.status(error.response.status).send(errorText);
+    } else {
+      console.error('Error:', error.message);
+      res.status(500).json({ error: 'Unknown error', message: error.message });
+    }
+  }
+});
+
+// Endpoint для генерации изображений (DALL·E 3)
+app.post('/image/generate', async (req, res) => {
+  try {
+    const { prompt, n = 1, size = '1024x1024' } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: 'No prompt provided' });
+    }
+    const openaiRequest = {
+      model: 'dall-e-3',
+      prompt,
+      n,
+      size
+    };
+    const response = await axios.post(
+      'https://api.openai.com/v1/images/generations',
+      openaiRequest,
+      {
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error('--- OpenAI DALL·E error ---');
+    if (error.response) {
+      let errorText = '';
+      if (Buffer.isBuffer(error.response.data)) {
+        errorText = error.response.data.toString('utf8');
+      } else if (typeof error.response.data === 'object' && error.response.data.type === 'Buffer') {
+        errorText = Buffer.from(error.response.data.data).toString('utf8');
+      } else {
+        errorText = JSON.stringify(error.response.data, null, 2);
+      }
+      console.error('Data:', errorText);
+      res.status(error.response.status).send(errorText);
+    } else {
+      console.error('Error:', error.message);
+      res.status(500).json({ error: 'Unknown error', message: error.message });
+    }
+  }
+});
+
 // Healthcheck endpoint для Railway
 app.get('/', (req, res) => res.send('OK'));
 
