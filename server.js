@@ -171,7 +171,7 @@ app.post('/chat/vision', upload.single('file'), async (req, res) => {
     }
     const base64Image = req.file.buffer.toString('base64');
     const openaiRequest = {
-      model: 'gpt-4-vision-preview',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'user',
