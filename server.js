@@ -57,7 +57,7 @@ app.post('/chat/pdf', upload.single('file'), async (req, res) => {
     const base64Pdf = req.file.buffer.toString('base64');
     // Формируем JSON-запрос для vision
     const openaiRequest = {
-      model: req.body.model || 'gpt-4o',
+      model: req.body.model || 'gpt-4-vision-preview',
       messages: [
         {
           role: 'user',
@@ -171,7 +171,7 @@ app.post('/chat/vision', upload.single('file'), async (req, res) => {
     }
     const base64Image = req.file.buffer.toString('base64');
     const openaiRequest = {
-      model: 'gpt-4o',
+      model: 'gpt-4-vision-preview',
       messages: [
         {
           role: 'user',
