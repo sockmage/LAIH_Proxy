@@ -11,6 +11,12 @@ app.use(cors());
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const upload = multer();
 
+// Default models
+const DEFAULT_CHAT_MODEL = 'gpt-4-turbo-preview';
+const DEFAULT_VISION_MODEL = 'gpt-4-vision-preview';
+const DEFAULT_TTS_MODEL = 'tts-1-hd';
+const DEFAULT_DALLE_MODEL = 'dall-e-3';
+
 app.post('/chat', async (req, res) => {
   // Логируем входящий запрос
   console.log('--- Incoming /chat request ---');
@@ -18,9 +24,15 @@ app.post('/chat', async (req, res) => {
   console.log('Body:', JSON.stringify(req.body, null, 2));
 
   try {
+    // Ensure we're using the latest model if not specified
+    const requestBody = {
+      ...req.body,
+      model: req.body.model || DEFAULT_CHAT_MODEL
+    };
+
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
-      req.body,
+      requestBody,
       {
         headers: {
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -57,7 +69,7 @@ app.post('/chat/pdf', upload.single('file'), async (req, res) => {
     const base64Pdf = req.file.buffer.toString('base64');
     // Формируем JSON-запрос для vision
     const openaiRequest = {
-      model: req.body.model || 'gpt-4-vision-preview',
+      model: req.body.model || DEFAULT_VISION_MODEL,
       messages: [
         {
           role: 'user',
@@ -116,7 +128,7 @@ app.post('/tts', async (req, res) => {
       "voice": "sora" // или arbor, sol, maple, ember, breeze, vale, juniper, spruce, cove
     }
   */
-  const { input, voice } = req.body;
+  const { input, voice, model = DEFAULT_TTS_MODEL } = req.body;
   if (!input || !voice) {
     return res.status(400).json({ error: 'Missing input or voice' });
   }
@@ -124,7 +136,7 @@ app.post('/tts', async (req, res) => {
     const response = await axios.post(
       'https://api.openai.com/v1/audio/speech',
       {
-        model: 'tts-1',
+        model,
         input,
         voice
       },
@@ -171,7 +183,7 @@ app.post('/chat/vision', upload.single('file'), async (req, res) => {
     }
     const base64Image = req.file.buffer.toString('base64');
     const openaiRequest = {
-      model: 'gpt-4o',
+      model: req.body.model || DEFAULT_VISION_MODEL,
       messages: [
         {
           role: 'user',
@@ -222,12 +234,12 @@ app.post('/chat/vision', upload.single('file'), async (req, res) => {
 // Endpoint для генерации изображений (DALL·E 3)
 app.post('/image/generate', async (req, res) => {
   try {
-    const { prompt, n = 1, size = '1024x1024' } = req.body;
+    const { prompt, n = 1, size = '1024x1024', model = DEFAULT_DALLE_MODEL } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: 'No prompt provided' });
     }
     const openaiRequest = {
-      model: 'dall-e-3',
+      model,
       prompt,
       n,
       size
@@ -268,7 +280,7 @@ app.get('/', (req, res) => res.send('OK'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Proxy server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
 
 // Глобальный обработчик необработанных ошибок
